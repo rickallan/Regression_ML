@@ -1,0 +1,51 @@
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import statsmodels.api as sm
+from sklearn.metrics import r2_score
+from sklearn import metrics
+import warnings
+warnings.filterwarnings('ignore') # We will first add all the important libraries, to work the dataset. 
+
+df = pd.read_csv("............/regression_data.csv") # We will then boot the right csv file with are dataset, using the correct path.
+
+df.head(4)
+df.columns
+df.isnull().sum()
+df.isnull().values.sum()
+df.dtypes
+df.count()
+df.sex.value_counts()
+df.children.value_counts()
+df.smoker.value_counts()
+df.region.value_counts() #descriptive statistics
+
+df.plot(x ='bmi', y='charges', kind = 'scatter')
+plt.show() #Scatter Plot
+
+sns.set()
+sns.displot(df["bmi"])
+plt.title("BMI DistributionN")
+plt.show() #Distribution
+
+df.plot(x ='smoker', y='charges', kind = 'scatter')
+plt.show() #Scatter Plot
+
+ax = sns.countplot(x=df.sex, hue=df.smoker)
+
+df.plot(x ='age', y='charges', kind = 'scatter')
+plt.show()
+
+sns.set()
+plt.figure(figsize = (12,10))
+sns.displot(df["age"])
+plt.title("Age Distribution")
+plt.show()
+
+df.plot(x ='children', y='charges', kind = 'scatter')
+plt.show()
+
+df.plot(x ='region', y='charges', kind = 'scatter')
+plt.show()
+
