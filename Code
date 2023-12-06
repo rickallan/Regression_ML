@@ -49,3 +49,114 @@ plt.show()
 df.plot(x ='region', y='charges', kind = 'scatter')
 plt.show()
 
+df.plot(x ='sex', y='charges', kind = 'scatter')
+plt.show()
+
+sns.relplot(x='age', y='charges', col='sex', hue='smoker', data=df)
+
+sns.lmplot(x="bmi", y="charges", hue='smoker', data=df, height=8)
+
+df.corr(method='pearson') #Correlation
+
+df_corr = df.corr()
+sns.heatmap(
+    df_corr, annot = True, cmap = 'Blues',
+    xticklabels = df_corr.columns.values,
+    yticklabels = df_corr.columns.values
+);
+plt.title('Charges Heatmap', fontsize = 15);
+plt.xticks(fontsize = 12);
+plt.yticks(fontsize = 12); #Heatmap
+
+df.replace({"sex":{"male":0,"female":1}}, inplace = True) # Ι will now encode the sex column.
+
+df.replace({"smoker":{"no":0,"yes":1}}, inplace = True) # I will now encode the smoker column.
+
+df.replace({"region":{"southeast":0,"southwest":1,"northeast":2,"northwest":3}}, inplace = True) # And finaly, I will encode the region column into 4 different numerical labels.
+
+df.head()
+
+fig, ax = plt.subplots(ncols=4, nrows=2, figsize=(20,10))
+index = 0
+ax = ax.flatten()
+
+for col, value in df.items():
+    sns.distplot(value, ax=ax[index])
+    index+= 1
+plt.tight_layout(pad=0.5, w_pad=0.7, h_pad=5.0)
+
+fig = plt.figure(figsize=(12,6))
+sns.heatmap(df.corr(), annot=True)
+
+# Train-Test Split
+X = df[['age', 'bmi', 'smoker']]
+y = df['charges'] # Let's choose those features that show some correlation (>0.20) with the dependent variable 'charges'.
+
+from sklearn.model_selection import train_test_split #Import Library
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+print("The number of rows and columns of X :",X.shape)
+print("The number of rows and columns of X_train :",X_train.shape)
+print("The number of rows and columns of X_test :",X_test.shape)
+
+X_test.info()
+
+X_train.info()
+
+from sklearn.linear_model import LinearRegression
+
+LR1 = LinearRegression() #First Regression
+LR1.fit(X_train,y_train)
+
+coeff_df = pd.DataFrame(LR1.coef_,X.columns,columns=['Coefficient'])
+coeff_df #It shows how much these variables affect the dependent variable 'charges'
+
+print(LR1.intercept_)
+
+y_pred1 = LR1.predict(X_test)
+plt.scatter(y_test, y_pred1) #Scatter Plot Test Values vs Predicted Values
+
+from sklearn import metrics
+print('MAE:', metrics.mean_absolute_error(y_test, y_pred1))
+print('MSE:', metrics.mean_squared_error(y_test, y_pred1))
+print('RMSE', np.sqrt(metrics.mean_squared_error(y_test, y_pred1))) #First Regression Evaluation
+
+score = r2_score(y_test,y_pred1)*100
+print("R2_score",score) #It is a fair score
+
+sns.distplot((y_test-y_pred1), hist_kws=dict(edgecolor="k", linewidth=2)) 
+#The r-squared is relatively good. Both MAE and RMSE show the average model prediction error for the medical charges. RMSE gives relatively high weight to large errors.
+
+y_log_train = np.log1p(y_train) #Second Regression
+
+LR2 = LinearRegression()
+LR2.fit(X_train,y_log_train)
+
+coeff_df = pd.DataFrame(LR2.coef_,X.columns,columns=['Coefficient'])
+coeff_df #In this set, the variable 'smoker', affects the model by a huge amount.
+print(LR2.intercept_)
+
+y_pred2 = LR2.predict(X_test) #Evaluate Second Model
+y_pred2 = np.expm1(y_pred2)
+
+plt.scatter(y_test, y_pred2) #Scatter Plot Test Values vs Predicted Values
+
+ from sklearn import metrics
+ print('MAE:', metrics.mean_absolute_error(y_test, y_pred2))
+ print('MSE:', metrics.mean_squared_error(y_test, y_pred2))
+ print('RMSE', np.sqrt(metrics.mean_squared_error(y_test, y_pred2))) #Second Regression Evaluation 
+
+ sns.distplot((y_test-y_pred2), hist_kws=dict(edgecolor="k", linewidth=2))
+
+def calc_insurance(age, bmi, smoking):
+    y = ((age*LR1.coef_[0]) + (bmi*LR1.coef_[1]) + (smoking*LR1.coef_[2]) + LR1.intercept_)
+    return y
+
+print(calc_insurance(38, 24, 0))
+
+print(calc_insurance(38, 24, 1))
+
+print(calc_insurance(24, 25, 0))
+
+print(calc_insurance(24, 25, 1))
